@@ -14,5 +14,8 @@ void main(){
 		modVert.z = sin(modVert.y * 200 + time * waveFrequency) * 10;
     }
 
-	gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * modVert;
+	vec4 pos = gl_ProjectionMatrix * gl_ModelViewMatrix * modVert;
+
+	gl_Position = pos;
+
 }

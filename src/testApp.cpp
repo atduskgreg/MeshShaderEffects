@@ -23,9 +23,7 @@ void testApp::setup(){
                 mesh.addIndex(i);
                 mesh.addIndex(i+1+grid);
                 mesh.addIndex(i+grid);
-
             }
-            
         }
     }
     
@@ -34,12 +32,17 @@ void testApp::setup(){
     center.z /= (float)(grid*grid);
     
     sineShader.load("shaders/sine.vert", "shaders/sine.frag");
+    noiseShader.load("shaders/noise.vert", "shaders/noise.frag");
+    shaderToApply = 2; // start with noise shader
+
     waveDirection = 0;
     waveFrequency = 1;
+    noiseAmount = 5.0;
 
 	cam.setDistance(500);
-
-        
+    
+    glEnable(GL_DEPTH_TEST);
+    
 }
 
 //--------------------------------------------------------------
@@ -51,25 +54,46 @@ void testApp::update(){
 void testApp::draw(){
     ofBackground(125);
     ofSetColor(0);
+    
     cam.lookAt(center);
-
     cam.begin();
     
+    if(shaderToApply == 1){
+        sineShader.begin();
+        sineShader.setUniform1f("time", ofGetElapsedTimef() );
+        sineShader.setUniform1i("waveDirection", waveDirection );
+        sineShader.setUniform1i("waveFrequency", waveFrequency );
+    } else if(shaderToApply == 2){
+        noiseShader.begin();
+        noiseShader.setUniform1f("noiseAmount", noiseAmount);
+        noiseShader.setUniform1f("time", ofGetElapsedTimef());
+    }
     
-    sineShader.begin();
-    sineShader.setUniform1f("time", ofGetElapsedTimef() );
-    sineShader.setUniform1i("waveDirection", waveDirection );
-    sineShader.setUniform1i("waveFrequency", waveFrequency );
-
     mesh.drawWireframe();
-    sineShader.end();
-
+    
+    if(shaderToApply == 1){
+        sineShader.end();
+    }else if(shaderToApply == 2){
+        noiseShader.end();
+    }
+    
     cam.end();
     
     ofSetColor(255);
+
     stringstream s;
     s << "FPS: " << ofGetFrameRate() << "\n";
-    s << "d   - toggle wave direction\n+/- - change wave frequency";
+    if(shaderToApply == 1){
+        s << "WAVE SHADER\n";
+        s << "d   - toggle wave direction\n+/- - change wave frequency";
+    } else if(shaderToApply == 2) {
+        s << "NOISE SHADER\n";
+        s << "+/- - change noise amount";
+    } else {
+        s << "NO SHADER";
+    }
+    
+    s << "\ns - to toggle shaders";
     ofDrawBitmapString(s.str(), ofPoint(25,25));
     
 }
@@ -84,24 +108,47 @@ void testApp::keyPressed(int key){
         } else {
             waveDirection = 0;
         }
-        cout << "waveDirection: " << waveDirection << endl;
+    }
+    
+    if(key == 's'){
+        shaderToApply++;
+        if(shaderToApply > 2){
+            shaderToApply = 0;
+        }
     }
     
     if(key == '-'){
-        waveFrequency--;
-        if(waveFrequency < 1){
-            waveFrequency = 1;
+        if(shaderToApply == 1){
+            waveFrequency--;
+            if(waveFrequency < 1){
+                waveFrequency = 1;
+            }
+        } else if(shaderToApply == 2){
+            noiseAmount --;
+            if(noiseAmount < 1){
+                noiseAmount = 1;
+            }
         }
     }
     
     if(key == '=' || key == '+'){
+        if(shaderToApply == 1){
         waveFrequency++;
+        } else if(shaderToApply == 2){
+            noiseAmount ++;
+        }
     }
     
     if(key == 'r'){
-        sineShader.unload();
-        sineShader.load("shaders/sine.vert", "shaders/sine.frag");
-        cout << "sine shader reloaded" << endl;
+        if(shaderToApply == 1){
+            sineShader.unload();
+            sineShader.load("shaders/sine.vert", "shaders/sine.frag");
+            cout << "sine shader reloaded" << endl;
+        } else if(shaderToApply == 2){
+            noiseShader.unload();
+            noiseShader.load("shaders/noise.vert", "shaders/noise.frag");
+            cout << "noise shader reloaded" << endl;
+        }
     }
 
 }

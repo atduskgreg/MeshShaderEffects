@@ -21,8 +21,11 @@ class testApp : public ofBaseApp{
     ofMesh mesh;
     ofEasyCam cam;
     ofVec3f center;
-    ofShader sineShader;
+    ofShader sineShader, noiseShader;
 
+    int shaderToApply; // 0 - none, 1 - sine, 2 - noise
+    
     int waveDirection, waveFrequency;
+    float noiseAmount;
 };
 
